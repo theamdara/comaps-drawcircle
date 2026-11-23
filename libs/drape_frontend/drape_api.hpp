@@ -66,10 +66,32 @@ struct DrapeApiLineData
   bool m_showId = false;
 };
 
+/**
+ * @brief Geometry and style for a filled circle rendered with Drape.
+ *
+ * The circle is defined by a center in mercator coordinates and a radius in
+ * meters on Earth. |m_angleStepDeg| controls how finely the ring is
+ * approximated (smaller values produce smoother circles at the cost of more
+ * geometry).
+ */
+struct DrapeApiCircleData
+{
+  DrapeApiCircleData() = default;
+  DrapeApiCircleData(m2::PointD const & center, double radiusM, dp::Color const & color)
+    : m_center(center), m_radiusM(radiusM), m_color(color)
+  {}
+
+  m2::PointD m_center;
+  double m_radiusM = 0.0;
+  dp::Color m_color;
+  double m_angleStepDeg = 5.0;
+};
+
 class DrapeApi
 {
 public:
   using TLines = ankerl::unordered_dense::map<std::string, DrapeApiLineData>;
+  using TCircles = ankerl::unordered_dense::map<std::string, DrapeApiCircleData>;
 
   DrapeApi() = default;
 
@@ -92,7 +114,28 @@ public:
   void RemoveLine(std::string const & id);
 
   /**
-   * @brief Removes all lines added with AddLine.
+   * @brief Adds a new filled circle.
+   *
+   * @param id A unique identifier for the circle. If a circle with the same id exists, it will be
+   * replaced by the new one. Use ids that do not collide with line ids.
+   * @param data The geometry and style of the circle.
+   */
+  void AddCircle(std::string const & id, DrapeApiCircleData const & data);
+
+  /**
+   * @brief Removes a circle.
+   *
+   * @param id The id of the circle to remove.
+   */
+  void RemoveCircle(std::string const & id);
+
+  /**
+   * @brief Removes all circles added with AddCircle.
+   */
+  void ClearCircles();
+
+  /**
+   * @brief Removes all lines and circles added with this API.
    */
   void Clear();
   void Invalidate();
@@ -100,5 +143,6 @@ public:
 private:
   DrapeEngineSafePtr m_engine;
   TLines m_lines;
+  TCircles m_circles;
 };
 }  // namespace df

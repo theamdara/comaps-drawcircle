@@ -1,6 +1,7 @@
 #include "qt/mainwindow.hpp"
 #include "qt/about.hpp"
 #include "qt/bookmark_dialog.hpp"
+#include "qt/circles_panel.hpp"
 #include "qt/draw_widget.hpp"
 #include "qt/mwms_borders_selection.hpp"
 #include "qt/osm_auth_dialog.hpp"
@@ -403,6 +404,11 @@ void MainWindow::CreateNavigationBar()
     m_rulerAction->setToolTip(tr("Check this button and use ALT + LMB to set points"));
     m_rulerAction->setCheckable(true);
     m_rulerAction->setChecked(false);
+
+    m_circlesAction = pToolBar->addAction(QIcon(":/navig64/circle.png"), tr("Circles"), this, SLOT(OnCirclesEnabled()));
+    m_circlesAction->setToolTip(tr("Draw circles: click to set the center, drag to set the radius (Esc to exit)"));
+    m_circlesAction->setCheckable(true);
+    m_circlesAction->setChecked(false);
 
     pToolBar->addSeparator();
 
@@ -965,6 +971,35 @@ void MainWindow::OnLayers3dBuildingsChange(int8_t const index)
 void MainWindow::OnRulerEnabled()
 {
   m_pDrawWidget->SetRuler(m_rulerAction->isChecked());
+}
+
+void MainWindow::OnCirclesEnabled()
+{
+  bool const enabled = m_circlesAction->isChecked();
+  if (enabled && m_circlesDock == nullptr)
+  {
+    m_circlesDock = new QDockWidget(tr("Circles"), this);
+    m_circlesDock->setObjectName("circlesDock");
+    m_circlesPanel = new qt::CirclesPanel(m_pDrawWidget, m_circlesDock);
+    m_circlesDock->setWidget(m_circlesPanel);
+    addDockWidget(Qt::RightDockWidgetArea, m_circlesDock);
+
+    connect(m_circlesDock, &QDockWidget::visibilityChanged, this, [this](bool visible)
+    {
+      if (m_circlesAction->isChecked() != visible)
+        m_circlesAction->setChecked(visible);
+      m_pDrawWidget->SetCircleMode(visible);
+    });
+    connect(m_pDrawWidget, &qt::DrawWidget::circleModeFinished, this, [this]()
+    {
+      m_circlesAction->setChecked(false);
+      m_circlesDock->hide();
+    });
+  }
+
+  if (m_circlesDock != nullptr)
+    m_circlesDock->setVisible(enabled);
+  m_pDrawWidget->SetCircleMode(enabled);
 }
 
 void MainWindow::OnRoutePointSelected(RouteMarkType type)

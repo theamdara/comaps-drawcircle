@@ -45,6 +45,55 @@ void DrapeApi::RemoveLine(std::string const & id)
                                 MessagePriority::Normal);
 }
 
+void DrapeApi::AddCircle(std::string const & id, DrapeApiCircleData const & data)
+{
+  DrapeEngineLockGuard lock(m_engine);
+  if (!lock)
+    return;
+
+  auto & threadCommutator = lock.Get()->m_threadCommutator;
+  auto const it = m_circles.find(id);
+  if (it != m_circles.end())
+  {
+    threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread, make_unique_dp<DrapeApiRemoveMessage>(id),
+                                  MessagePriority::Normal);
+  }
+
+  m_circles[id] = data;
+
+  TCircles circles;
+  circles.insert(std::make_pair(id, data));
+  threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread, make_unique_dp<DrapeApiAddCirclesMessage>(circles),
+                                MessagePriority::Normal);
+}
+
+void DrapeApi::RemoveCircle(std::string const & id)
+{
+  DrapeEngineLockGuard lock(m_engine);
+  if (!lock)
+    return;
+
+  auto & threadCommutator = lock.Get()->m_threadCommutator;
+  m_circles.erase(id);
+  threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread, make_unique_dp<DrapeApiRemoveMessage>(id),
+                                MessagePriority::Normal);
+}
+
+void DrapeApi::ClearCircles()
+{
+  DrapeEngineLockGuard lock(m_engine);
+  if (!lock)
+    return;
+
+  auto & threadCommutator = lock.Get()->m_threadCommutator;
+  for (auto const & circle : m_circles)
+  {
+    threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread,
+                                  make_unique_dp<DrapeApiRemoveMessage>(circle.first), MessagePriority::Normal);
+  }
+  m_circles.clear();
+}
+
 void DrapeApi::Clear()
 {
   DrapeEngineLockGuard lock(m_engine);
@@ -53,6 +102,7 @@ void DrapeApi::Clear()
 
   auto & threadCommutator = lock.Get()->m_threadCommutator;
   m_lines.clear();
+  m_circles.clear();
   threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread,
                                 make_unique_dp<DrapeApiRemoveMessage>("", true /* remove all */),
                                 MessagePriority::Normal);
@@ -71,5 +121,7 @@ void DrapeApi::Invalidate()
 
   threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread,
                                 make_unique_dp<DrapeApiAddLinesMessage>(m_lines), MessagePriority::Normal);
+  threadCommutator->PostMessage(ThreadsCommutator::ResourceUploadThread,
+                                make_unique_dp<DrapeApiAddCirclesMessage>(m_circles), MessagePriority::Normal);
 }
 }  // namespace df

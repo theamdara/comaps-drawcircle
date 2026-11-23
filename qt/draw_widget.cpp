@@ -11,6 +11,8 @@
 
 #include "generator/borders.hpp"
 
+#include "geometry/mercator.hpp"
+
 #include "map/framework.hpp"
 
 #include "search/result.hpp"
@@ -261,7 +263,15 @@ void DrawWidget::mousePressEvent(QMouseEvent * e)
 
   if (IsLeftButton(e))
   {
-    if (IsShiftModifier(e))
+    if (m_circleMode && !IsAltModifier(e) && !IsShiftModifier(e) && !IsCommandModifier(e))
+    {
+      m_circleDragCenter = P2G(pt);
+      m_circleDragging = true;
+      CircleManager::ShowPreview(m_framework.GetDrapeApi(), m_circleDragCenter, 1.0 /* radiusM */, m_circleColor);
+      e->accept();
+      return;
+    }
+    else if (IsShiftModifier(e))
       SubmitRoutingPoint(pt, false);
     else if (m_ruler.IsActive() && IsAltModifier(e))
       SubmitRulerPoint(pt);
@@ -297,6 +307,14 @@ void DrawWidget::mouseMoveEvent(QMouseEvent * e)
     return;
 
   QOpenGLWidget::mouseMoveEvent(e);
+
+  if (m_circleDragging && IsLeftButton(e))
+  {
+    auto const radiusM = mercator::DistanceOnEarth(m_circleDragCenter, P2G(GetDevicePoint(e)));
+    CircleManager::ShowPreview(m_framework.GetDrapeApi(), m_circleDragCenter, radiusM, m_circleColor);
+    e->accept();
+    return;
+  }
 
   if (IsLeftButton(e) && !IsAltModifier(e))
   {
@@ -371,6 +389,12 @@ void DrawWidget::mouseReleaseEvent(QMouseEvent * e)
     return;
 
   QOpenGLWidget::mouseReleaseEvent(e);
+  if (m_circleDragging && IsLeftButton(e))
+  {
+    FinishCircleDrag(P2G(GetDevicePoint(e)));
+    e->accept();
+    return;
+  }
   if (IsLeftButton(e) && !IsAltModifier(e))
     m_framework.TouchEvent(GetDfTouchEventFromQMouseEvent(e, df::TouchEvent::TOUCH_UP));
   else if (m_selectionMode && IsRightButton(e) && m_rubberBand != nullptr && m_rubberBand->isVisible())
@@ -429,6 +453,13 @@ void DrawWidget::keyPressEvent(QKeyEvent * e)
 {
   if (m_screenshotMode)
     return;
+
+  if (m_circleMode && e->key() == Qt::Key_Escape)
+  {
+    SetCircleMode(false);
+    emit circleModeFinished();
+    return;
+  }
 
   if (IsLeftButton(QGuiApplication::mouseButtons()) && e->key() == Qt::Key_Control)
   {
@@ -547,6 +578,54 @@ void DrawWidget::SubmitRulerPoint(m2::PointD const & pt)
 {
   m_ruler.AddPoint(P2G(pt));
   m_ruler.DrawLine(m_framework.GetDrapeApi());
+}
+
+void DrawWidget::SetCircleMode(bool enabled)
+{
+  if (!enabled && m_circleDragging)
+  {
+    CircleManager::HidePreview(m_framework.GetDrapeApi());
+    m_circleDragging = false;
+  }
+  m_circleMode = enabled;
+}
+
+void DrawWidget::FinishCircleDrag(m2::PointD const & pt)
+{
+  CircleManager::HidePreview(m_framework.GetDrapeApi());
+  m_circleDragging = false;
+
+  auto const radiusM = mercator::DistanceOnEarth(m_circleDragCenter, pt);
+  if (radiusM < 1.0)
+    return;
+
+  m_circleManager.AddCircle(m_framework.GetDrapeApi(), m_circleDragCenter, radiusM, m_circleColor);
+  emit circlesChanged();
+}
+
+std::string DrawWidget::AddCircle(m2::PointD const & center, double radiusM, dp::Color const & color)
+{
+  auto const id = m_circleManager.AddCircle(m_framework.GetDrapeApi(), center, radiusM, color);
+  emit circlesChanged();
+  return id;
+}
+
+void DrawWidget::UpdateCircle(std::string const & id, double radiusM, dp::Color const & color)
+{
+  m_circleManager.UpdateCircle(m_framework.GetDrapeApi(), id, radiusM, color);
+  emit circlesChanged();
+}
+
+void DrawWidget::RemoveCircle(std::string const & id)
+{
+  m_circleManager.RemoveCircle(m_framework.GetDrapeApi(), id);
+  emit circlesChanged();
+}
+
+void DrawWidget::ClearCircles()
+{
+  m_circleManager.ClearAll(m_framework.GetDrapeApi());
+  emit circlesChanged();
 }
 
 void DrawWidget::SubmitRoutingPoint(m2::PointD const & pt, bool pointIsMercator)

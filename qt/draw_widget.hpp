@@ -1,5 +1,6 @@
 #pragma once
 
+#include "qt/circle_manager.hpp"
 #include "qt/qt_common/map_widget.hpp"
 #include "qt/routing_turns_visualizer.hpp"
 #include "qt/ruler.hpp"
@@ -59,6 +60,19 @@ public:
 
   void SetRuler(bool enabled);
 
+  /// @name User-drawn circles.
+  //@{
+  void SetCircleMode(bool enabled);
+  bool IsCircleMode() const { return m_circleMode; }
+
+  std::string AddCircle(m2::PointD const & center, double radiusM, dp::Color const & color);
+  void UpdateCircle(std::string const & id, double radiusM, dp::Color const & color);
+  void RemoveCircle(std::string const & id);
+  void ClearCircles();
+  void SetCircleColor(dp::Color const & color) { m_circleColor = color; }
+  CircleManager & GetCircleManager() { return m_circleManager; }
+  //@}
+
   RouteMarkType GetRoutePointAddMode() const { return m_routePointAddMode; }
   void SetRoutePointAddMode(RouteMarkType mode) { m_routePointAddMode = mode; }
   void FollowRoute();
@@ -86,9 +100,14 @@ protected:
   void keyPressEvent(QKeyEvent * e) override;
   void keyReleaseEvent(QKeyEvent * e) override;
 
+Q_SIGNALS:
+  void circlesChanged();
+  void circleModeFinished();
+
 private:
   void SubmitFakeLocationPoint(m2::PointD const & pt);
   void SubmitRulerPoint(m2::PointD const & pt);
+  void FinishCircleDrag(m2::PointD const & pt);
   void SubmitRoutingPoint(m2::PointD const & pt, bool pointIsMercator);
   void SubmitBookmark(m2::PointD const & pt);
   void ShowPlacePage();
@@ -122,5 +141,11 @@ private:
   std::unique_ptr<Screenshoter> m_screenshoter;
   Ruler m_ruler;
   RoutingTurnsVisualizer m_turnsVisualizer;
+
+  CircleManager m_circleManager;
+  bool m_circleMode = false;
+  bool m_circleDragging = false;
+  m2::PointD m_circleDragCenter;
+  dp::Color m_circleColor = dp::Color(255, 0, 0, 100);
 };
 }  // namespace qt

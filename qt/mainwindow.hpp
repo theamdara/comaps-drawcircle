@@ -28,6 +28,7 @@ class Result;
 
 namespace qt
 {
+class CirclesPanel;
 class DrawWidget;
 class PopupMenuHolder;
 struct ScreenshotParams;
@@ -53,6 +54,9 @@ class MainWindow
   QAction * m_pCreateFeatureAction = nullptr;
   QAction * m_pSearchAction = nullptr;
   QAction * m_rulerAction = nullptr;
+  QAction * m_circlesAction = nullptr;
+  QDockWidget * m_circlesDock = nullptr;
+  qt::CirclesPanel * m_circlesPanel = nullptr;
 
   PopupMenuHolder * m_walkingMapMode = nullptr;
   PopupMenuHolder * m_cyclingMapMode = nullptr;
@@ -138,6 +142,7 @@ protected Q_SLOTS:
   void OnLayers3dBuildingsChange(int8_t const index);
 
   void OnRulerEnabled();
+  void OnCirclesEnabled();
 
   void OnRoutePointSelected(RouteMarkType type);
   void OnFollowRoute();

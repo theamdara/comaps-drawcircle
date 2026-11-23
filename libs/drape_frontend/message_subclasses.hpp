@@ -1208,6 +1208,19 @@ private:
   DrapeApi::TLines m_lines;
 };
 
+class DrapeApiAddCirclesMessage : public Message
+{
+public:
+  explicit DrapeApiAddCirclesMessage(DrapeApi::TCircles const & circles) : m_circles(circles) {}
+
+  Type GetType() const override { return Type::DrapeApiAddCircles; }
+
+  DrapeApi::TCircles & GetCircles() { return m_circles; }
+
+private:
+  DrapeApi::TCircles m_circles;
+};
+
 class DrapeApiRemoveMessage : public Message
 {
 public:

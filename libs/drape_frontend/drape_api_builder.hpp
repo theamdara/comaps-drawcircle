@@ -32,5 +32,9 @@ class DrapeApiBuilder
 public:
   void BuildLines(ref_ptr<dp::GraphicsContext> context, DrapeApi::TLines & lines, ref_ptr<dp::TextureManager> textures,
                   std::vector<drape_ptr<DrapeApiRenderProperty>> & properties);
+
+  void BuildCircles(ref_ptr<dp::GraphicsContext> context, DrapeApi::TCircles & circles,
+                    ref_ptr<dp::TextureManager> textures,
+                    std::vector<drape_ptr<DrapeApiRenderProperty>> & properties);
 };
 }  // namespace df

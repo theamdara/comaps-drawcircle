@@ -80,6 +80,7 @@ public:
     ClearTrafficData,
     SetSimplifiedTrafficColors,
     DrapeApiAddLines,
+    DrapeApiAddCircles,
     DrapeApiRemove,
     DrapeApiFlush,
     SetCustomFeatures,

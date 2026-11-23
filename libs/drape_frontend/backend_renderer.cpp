@@ -584,6 +584,17 @@ void BackendRenderer::AcceptMessage(ref_ptr<Message> message)
     break;
   }
 
+  case Message::Type::DrapeApiAddCircles:
+  {
+    ref_ptr<DrapeApiAddCirclesMessage> msg = message;
+    CHECK(m_context != nullptr, ());
+    std::vector<drape_ptr<DrapeApiRenderProperty>> properties;
+    m_drapeApiBuilder->BuildCircles(m_context, msg->GetCircles(), m_texMng, properties);
+    m_commutator->PostMessage(ThreadsCommutator::RenderThread,
+                              make_unique_dp<DrapeApiFlushMessage>(std::move(properties)), MessagePriority::Normal);
+    break;
+  }
+
   case Message::Type::DrapeApiRemove:
   {
     ref_ptr<DrapeApiRemoveMessage> msg = message;

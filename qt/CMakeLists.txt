@@ -21,6 +21,10 @@ set(SRC
   build_style/build_style.h
   build_style/run_tests.cpp
   build_style/run_tests.h
+  circle_manager.cpp
+  circle_manager.hpp
+  circles_panel.cpp
+  circles_panel.hpp
   create_feature_dialog.cpp
   create_feature_dialog.hpp
   draw_widget.cpp

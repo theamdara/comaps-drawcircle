@@ -79,6 +79,7 @@ std::string DebugPrint(Message::Type msgType)
   case Message::Type::ClearTrafficData: return "ClearTrafficData";
   case Message::Type::SetSimplifiedTrafficColors: return "SetSimplifiedTrafficColors";
   case Message::Type::DrapeApiAddLines: return "DrapeApiAddLines";
+  case Message::Type::DrapeApiAddCircles: return "DrapeApiAddCircles";
   case Message::Type::DrapeApiRemove: return "DrapeApiRemove";
   case Message::Type::DrapeApiFlush: return "DrapeApiFlush";
   case Message::Type::SetCustomFeatures: return "SetCustomFeatures";
