@@ -127,6 +127,45 @@ You can help by donating, contributing code, translating, or by telling others a
 
 There is a dedicated [Zulip](https://codeberg.org/comaps/Governance/src/branch/main/contribute.md#3-team-messaging) chat for active contributors.
 
+## Linux Build
+native Linux build path for your machine (Fedora 43, repo already cloned at /home/tun/comapscpp/comaps). Nothing here touches Flatpak — that's only used by Flathub CI/lint and a data-path fallback, not by a local build.
+1. Install dependencies (Fedora)
+
+sudo dnf install -y \
+  awk wget optipng git clang cmake ninja-build \
+  icu freetype-devel libicu-devel libstdc++-devel \
+  mesa-libGL-devel libglvnd-devel \
+  qt6-qtbase-devel qt6-qtsvg-devel qt6-qtpositioning qt6-qtpositioning-devel \
+  python3 python3-pip sqlite-devel \
+  libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel \
+  jq zlib-devel
+
+You already have most of these; the main missing piece is the Qt 6 devel packages (qt6-qtbase-devel, qt6-qtsvg-devel, qt6-qtpositioning-devel).
+2. Configure the repo
+
+cd /home/tun/comapscpp/comaps
+./configure.sh
+
+This initializes submodules, bootstraps Boost, creates a local .venv with the right protobuf, downloads World.mwm/WorldCoasts.mwm, and generates symbols/drules/strings. To skip the world-map download (e.g. you'll add maps yourself later), use SKIP_MAP_DOWNLOAD=1 ./configure.sh.
+3. Build the desktop app (native binary)
+
+tools/unix/build_omim.sh -r desktop
+
+    -r = release (add -d for debug, -R for release+debug info)
+    Output: ../omim-build-release/CoMaps
+    Other useful flags: -n <jobs> to limit parallelism, -p <dir> to change output location, -x for precompiled headers.
+    If you run out of memory during compilation: CMAKE_CONFIG="-DCMAKE_UNITY_BUILD=OFF" tools/unix/build_omim.sh -r desktop
+
+4. Run it
+
+The binary expects the repo's data/ folder in the current working directory:
+
+cd /home/tun/comapscpp/comaps 
+
+../omim-build-release/CoMaps
+
+Add your own region maps as data/<version>/<CountryLeafId>.mwm (IDs must match data/countries.txt). Use ../omim-build-release/CoMaps -help for runtime options like -lang, -data_path, etc.
+
 ---
 
 ## 💬 Feedback
@@ -169,4 +208,3 @@ Licensed under the Apache License 2.0.
 See [LICENSE](LICENSE), [NOTICE](NOTICE), and [data/copyright.html](data/copyright.html). 
 
 Our project is completely free and open source software. It had been reviewed by "[is it really FOSS?](https://isitreallyfoss.com/projects/comaps/)" and is listed as 100% FOSS, [see what that means](https://isitreallyfoss.com/about/categorisation/)
-
