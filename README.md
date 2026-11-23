@@ -128,7 +128,7 @@ You can help by donating, contributing code, translating, or by telling others a
 There is a dedicated [Zulip](https://codeberg.org/comaps/Governance/src/branch/main/contribute.md#3-team-messaging) chat for active contributors.
 
 ## Linux Build
-native Linux build path for your machine (Fedora 43, repo already cloned at /home/tun/comapscpp/comaps). Nothing here touches Flatpak — that's only used by Flathub CI/lint and a data-path fallback, not by a local build.
+native Linux build path for your machine (Fedora 43, repo already cloned at comaps). Nothing here touches Flatpak — that's only used by Flathub CI/lint and a data-path fallback, not by a local build.
 1. Install dependencies (Fedora)
 
 sudo dnf install -y \
@@ -143,7 +143,7 @@ sudo dnf install -y \
 You already have most of these; the main missing piece is the Qt 6 devel packages (qt6-qtbase-devel, qt6-qtsvg-devel, qt6-qtpositioning-devel).
 2. Configure the repo
 
-cd /home/tun/comapscpp/comaps
+cd comaps
 ./configure.sh
 
 This initializes submodules, bootstraps Boost, creates a local .venv with the right protobuf, downloads World.mwm/WorldCoasts.mwm, and generates symbols/drules/strings. To skip the world-map download (e.g. you'll add maps yourself later), use SKIP_MAP_DOWNLOAD=1 ./configure.sh.
@@ -160,7 +160,7 @@ tools/unix/build_omim.sh -r desktop
 
 The binary expects the repo's data/ folder in the current working directory:
 
-cd /home/tun/comapscpp/comaps 
+cd comaps 
 
 ../omim-build-release/CoMaps
 
